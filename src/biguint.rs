@@ -30,9 +30,11 @@ mod shift;
 pub(crate) use self::convert::to_str_radix_reversed;
 pub use self::iter::{U32Digits, U64Digits};
 
+pub(crate) type InnerType = smallvec::SmallVec<[BigDigit; 1]>;
+
 /// A big unsigned integer type.
 pub struct BigUint {
-    data: Vec<BigDigit>,
+    data: InnerType,
 }
 
 // Note: derived `Clone` doesn't specialize `clone_from`,
@@ -164,7 +166,7 @@ impl ConstZero for BigUint {
 impl One for BigUint {
     #[inline]
     fn one() -> BigUint {
-        BigUint { data: vec![1] }
+        BigUint { data: smallvec::smallvec![1] }
     }
 
     #[inline]
@@ -523,13 +525,13 @@ pub trait ToBigUint {
 ///
 /// The digits are in little-endian base matching `BigDigit`.
 #[inline]
-pub(crate) fn biguint_from_vec(digits: Vec<BigDigit>) -> BigUint {
+pub(crate) fn biguint_from_vec(digits: InnerType) -> BigUint {
     BigUint { data: digits }.normalized()
 }
 
 impl BigUint {
     /// A constant `BigUint` with value 0, useful for static initialization.
-    pub const ZERO: Self = BigUint { data: Vec::new() };
+    pub const ZERO: Self = BigUint { data: smallvec::SmallVec::new_const() };
 
     /// Creates and initializes a [`BigUint`].
     ///
@@ -1070,7 +1072,7 @@ impl num_traits::ToBytes for BigUint {
 
 pub(crate) trait IntDigits {
     fn digits(&self) -> &[BigDigit];
-    fn digits_mut(&mut self) -> &mut Vec<BigDigit>;
+    fn digits_mut(&mut self) -> &mut InnerType;
     fn normalize(&mut self);
     fn capacity(&self) -> usize;
     fn len(&self) -> usize;
@@ -1082,7 +1084,7 @@ impl IntDigits for BigUint {
         &self.data
     }
     #[inline]
-    fn digits_mut(&mut self) -> &mut Vec<BigDigit> {
+    fn digits_mut(&mut self) -> &mut InnerType {
         &mut self.data
     }
     #[inline]
@@ -1149,7 +1151,7 @@ cfg_digit!(
     fn test_from_slice() {
         fn check(slice: &[u32], data: &[BigDigit]) {
             assert_eq!(
-                BigUint::from_slice(slice).data,
+                BigUint::from_slice(slice).data.as_slice(),
                 data,
                 "from {:?}, to {:?}",
                 slice,

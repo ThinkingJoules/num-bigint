@@ -70,7 +70,7 @@ fn from_inexact_bitwise_digits_le(v: &[u8], bits: u8) -> BigUint {
     let big_digits = Integer::div_ceil(&total_bits, &big_digit::BITS.into())
         .to_usize()
         .unwrap_or(usize::MAX);
-    let mut data = Vec::with_capacity(big_digits);
+    let mut data = smallvec::SmallVec::with_capacity(big_digits);
 
     let mut d = 0;
     let mut dbits = 0; // number of bits we currently have in d
@@ -117,7 +117,7 @@ fn from_radix_digits_be(v: &[u8], radix: u32) -> BigUint {
         (bits / big_digit::BITS as usize) + 1
     };
 
-    let mut data = Vec::with_capacity(big_digits.to_usize().unwrap_or(0));
+    let mut data = smallvec::SmallVec::with_capacity(big_digits.to_usize().unwrap_or(0));
 
     let (base, power) = get_radix_base(radix);
     let radix = radix as BigDigit;

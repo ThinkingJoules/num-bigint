@@ -1,9 +1,8 @@
-use super::{biguint_from_vec, BigUint};
+use super::{biguint_from_vec, BigUint, InnerType};
 
 use crate::big_digit;
 
 use alloc::borrow::Cow;
-use alloc::vec::Vec;
 use core::mem;
 use core::ops::{Shl, ShlAssign, Shr, ShrAssign};
 use num_traits::{PrimInt, Zero};
@@ -27,9 +26,9 @@ fn biguint_shl2(n: Cow<'_, BigUint>, digits: usize, shift: u8) -> BigUint {
         0 => n.into_owned().data,
         _ => {
             let len = digits.saturating_add(n.data.len() + 1);
-            let mut data = Vec::with_capacity(len);
+            let mut data = smallvec::SmallVec::with_capacity(len);
             data.resize(digits, 0);
-            data.extend(n.data.iter());
+            data.extend_from_slice(n.data.as_slice());
             data
         }
     };
@@ -70,8 +69,8 @@ fn biguint_shr2(n: Cow<'_, BigUint>, digits: usize, shift: u8) -> BigUint {
         n.set_zero();
         return n;
     }
-    let mut data = match n {
-        Cow::Borrowed(n) => n.data[digits..].to_vec(),
+    let mut data: InnerType = match n {
+        Cow::Borrowed(n) => n.data[digits..].into(),
         Cow::Owned(mut n) => {
             n.data.drain(..digits);
             n.data

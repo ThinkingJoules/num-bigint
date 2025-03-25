@@ -534,7 +534,7 @@ impl IntDigits for BigInt {
         self.data.digits()
     }
     #[inline]
-    fn digits_mut(&mut self) -> &mut Vec<BigDigit> {
+    fn digits_mut(&mut self) -> &mut crate::biguint::InnerType {
         self.data.digits_mut()
     }
     #[inline]

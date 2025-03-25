@@ -167,7 +167,7 @@ fn div_rem(mut u: BigUint, mut d: BigUint) -> (BigUint, BigUint) {
     }
 
     if d.data.len() == 1 {
-        if d.data == [1] {
+        if d.data == [1].into() {
             return (u, BigUint::ZERO);
         }
         let (div, rem) = div_rem_digit(u, d.data[0]);
@@ -214,7 +214,7 @@ pub(super) fn div_rem_ref(u: &BigUint, d: &BigUint) -> (BigUint, BigUint) {
     }
 
     if d.data.len() == 1 {
-        if d.data == [1] {
+        if d.data == [1].into() {
             return (u.clone(), BigUint::ZERO);
         }
 
@@ -279,7 +279,7 @@ fn div_rem_core(mut a: BigUint, b: &[BigDigit]) -> (BigUint, BigUint) {
 
     let q_len = a.data.len() - b.len() + 1;
     let mut q = BigUint {
-        data: vec![0; q_len],
+        data: smallvec::smallvec![0; q_len],
     };
 
     for j in (0..q_len).rev() {

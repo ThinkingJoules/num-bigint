@@ -43,6 +43,7 @@ harness = false
 name = "shootout-pidigits"
 
 [dependencies]
+smallvec = { version = "1.14.0", features = ["const_new"] }
 
 [dependencies.num-integer]
 version = "0.1.46"
