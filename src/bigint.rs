@@ -569,6 +569,10 @@ impl BigInt {
         data: BigUint::ZERO,
     };
 
+    pub const fn new_const(sign: Sign, data: BigUint) -> Self {
+        BigInt { sign, data }
+    }
+
     /// Creates and initializes a [`BigInt`].
     ///
     /// The base 2<sup>32</sup> digits are ordered least significant digit first.
@@ -1226,4 +1230,11 @@ fn test_assign_from_slice() {
     check(Plus, 0, NoSign, 0);
     check(Minus, 1, Minus, 1);
     check(NoSign, 1, NoSign, 0);
+}
+
+#[test]
+fn test_new_const() {
+    assert_eq!(BigInt::new_const(Plus, BigUint::new_const(core::num::NonZeroU64::new(1).unwrap())), BigInt::one());
+    assert_eq!(BigInt::new_const(Plus, BigUint::new_const(core::num::NonZeroU64::new(42).unwrap())), BigInt::from(42u64));
+    assert_eq!(BigInt::new_const(Plus, BigUint::new_const(core::num::NonZeroU64::new(u64::MAX).unwrap())), BigInt::from(u64::MAX));
 }

@@ -9,6 +9,7 @@ use core::fmt;
 use core::hash;
 use core::mem;
 use core::str;
+use core::u64;
 
 use num_integer::{Integer, Roots};
 use num_traits::{ConstZero, Num, One, Pow, ToPrimitive, Unsigned, Zero};
@@ -532,6 +533,10 @@ pub(crate) fn biguint_from_vec(digits: InnerType) -> BigUint {
 impl BigUint {
     /// A constant `BigUint` with value 0, useful for static initialization.
     pub const ZERO: Self = BigUint { data: smallvec::SmallVec::new_const() };
+
+    pub const fn new_const(value:core::num::NonZeroU64) -> Self {
+        BigUint { data: smallvec::SmallVec::from_const([value.get()]) }
+    }
 
     /// Creates and initializes a [`BigUint`].
     ///
@@ -1206,3 +1211,11 @@ fn test_u128_u32_roundtrip() {
         assert_eq!(u32_to_u128(a, b, c, d), *val);
     }
 }
+
+#[test]
+fn test_new_const() {
+    assert_eq!(BigUint::new_const(core::num::NonZeroU64::new(1).unwrap()), BigUint::one());
+    assert_eq!(BigUint::new_const(core::num::NonZeroU64::new(42).unwrap()), BigUint::from(42u64));
+    assert_eq!(BigUint::new_const(core::num::NonZeroU64::new(u64::MAX).unwrap()), BigUint::from(u64::MAX));
+}
+
