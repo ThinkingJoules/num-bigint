@@ -14,6 +14,9 @@ use num_traits::{
     pow, Euclid, FromBytes, FromPrimitive, Num, One, Pow, Signed, ToBytes, ToPrimitive, Zero,
 };
 
+use smallvec::smallvec;
+type ByteVec = smallvec::SmallVec<[u8; 8]>;
+
 mod consts;
 use crate::consts::*;
 
@@ -48,11 +51,11 @@ fn test_to_bytes_be() {
     check("AB", "16706");
     check("Hello world!", "22405534230753963835153736737");
     let b: BigInt = Zero::zero();
-    assert_eq!(b.to_bytes_be(), (NoSign, vec![0]));
+    assert_eq!(b.to_bytes_be(), (NoSign, smallvec![0]));
 
     // Test with leading/trailing zero bytes and a full BigDigit of value 0
     let b = BigInt::from_str_radix("00010000000000000200", 16).unwrap();
-    assert_eq!(b.to_bytes_be(), (Plus, vec![1, 0, 0, 0, 0, 0, 0, 2, 0]));
+    assert_eq!(b.to_bytes_be(), (Plus, smallvec![1, 0, 0, 0, 0, 0, 0, 2, 0]));
 }
 
 #[test]
@@ -83,29 +86,29 @@ fn test_to_bytes_le() {
     check("BA", "16706");
     check("!dlrow olleH", "22405534230753963835153736737");
     let b: BigInt = Zero::zero();
-    assert_eq!(b.to_bytes_le(), (NoSign, vec![0]));
+    assert_eq!(b.to_bytes_le(), (NoSign, smallvec![0]));
 
     // Test with leading/trailing zero bytes and a full BigDigit of value 0
     let b = BigInt::from_str_radix("00010000000000000200", 16).unwrap();
-    assert_eq!(b.to_bytes_le(), (Plus, vec![0, 2, 0, 0, 0, 0, 0, 0, 1]));
+    assert_eq!(b.to_bytes_le(), (Plus, smallvec![0, 2, 0, 0, 0, 0, 0, 0, 1]));
 }
 
 #[test]
 fn test_to_signed_bytes_le() {
-    fn check(s: &str, result: Vec<u8>) {
+    fn check(s: &str, result: ByteVec) {
         let b = BigInt::parse_bytes(s.as_bytes(), 10).unwrap();
         assert_eq!(b.to_signed_bytes_le(), result);
         assert_eq!(<BigInt as ToBytes>::to_le_bytes(&b), result);
     }
 
-    check("0", vec![0]);
-    check("32767", vec![0xff, 0x7f]);
-    check("-1", vec![0xff]);
-    check("16777216", vec![0, 0, 0, 1]);
-    check("-100", vec![156]);
-    check("-8388608", vec![0, 0, 0x80]);
-    check("-192", vec![0x40, 0xff]);
-    check("128", vec![0x80, 0])
+    check("0", smallvec![0]);
+    check("32767", smallvec![0xff, 0x7f]);
+    check("-1", smallvec![0xff]);
+    check("16777216", smallvec![0, 0, 0, 1]);
+    check("-100", smallvec![156]);
+    check("-8388608", smallvec![0, 0, 0x80]);
+    check("-192", smallvec![0x40, 0xff]);
+    check("128", smallvec![0x80, 0]);
 }
 
 #[test]
@@ -130,20 +133,20 @@ fn test_from_signed_bytes_le() {
 
 #[test]
 fn test_to_signed_bytes_be() {
-    fn check(s: &str, result: Vec<u8>) {
+    fn check(s: &str, result: ByteVec) {
         let b = BigInt::parse_bytes(s.as_bytes(), 10).unwrap();
         assert_eq!(b.to_signed_bytes_be(), result);
         assert_eq!(<BigInt as ToBytes>::to_be_bytes(&b), result);
     }
 
-    check("0", vec![0]);
-    check("32767", vec![0x7f, 0xff]);
-    check("-1", vec![255]);
-    check("16777216", vec![1, 0, 0, 0]);
-    check("-100", vec![156]);
-    check("-8388608", vec![128, 0, 0]);
-    check("-192", vec![0xff, 0x40]);
-    check("128", vec![0, 0x80]);
+    check("0", smallvec![0]);
+    check("32767", smallvec![0x7f, 0xff]);
+    check("-1", smallvec![255]);
+    check("16777216", smallvec![1, 0, 0, 0]);
+    check("-100", smallvec![156]);
+    check("-8388608", smallvec![128, 0, 0]);
+    check("-192", smallvec![0xff, 0x40]);
+    check("128", smallvec![0, 0x80]);
 }
 
 #[test]

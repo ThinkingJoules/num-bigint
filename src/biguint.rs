@@ -32,6 +32,7 @@ pub(crate) use self::convert::to_str_radix_reversed;
 pub use self::iter::{U32Digits, U64Digits};
 
 pub(crate) type InnerType = smallvec::SmallVec<[BigDigit; 1]>;
+pub type ByteVec = smallvec::SmallVec<[u8; 8]>;
 
 /// A big unsigned integer type.
 pub struct BigUint {
@@ -658,7 +659,7 @@ impl BigUint {
     ///
     /// let inbase190 = &[15, 33, 125, 12, 14];
     /// let a = BigUint::from_radix_be(inbase190, 190).unwrap();
-    /// assert_eq!(a.to_radix_be(190), inbase190);
+    /// assert_eq!(a.to_radix_be(190).as_slice(), inbase190);
     /// ```
     pub fn from_radix_be(buf: &[u8], radix: u32) -> Option<BigUint> {
         convert::from_radix_be(buf, radix)
@@ -678,7 +679,7 @@ impl BigUint {
     ///
     /// let inbase190 = &[14, 12, 125, 33, 15];
     /// let a = BigUint::from_radix_be(inbase190, 190).unwrap();
-    /// assert_eq!(a.to_radix_be(190), inbase190);
+    /// assert_eq!(a.to_radix_be(190).as_slice(), inbase190);
     /// ```
     pub fn from_radix_le(buf: &[u8], radix: u32) -> Option<BigUint> {
         convert::from_radix_le(buf, radix)
@@ -692,10 +693,11 @@ impl BigUint {
     /// use num_bigint::BigUint;
     ///
     /// let i = BigUint::parse_bytes(b"1125", 10).unwrap();
-    /// assert_eq!(i.to_bytes_be(), vec![4, 101]);
+    /// let a: smallvec::SmallVec<[u8; 8]> = smallvec::smallvec![4, 101];
+    /// assert_eq!(i.to_bytes_be(), a);
     /// ```
     #[inline]
-    pub fn to_bytes_be(&self) -> Vec<u8> {
+    pub fn to_bytes_be(&self) -> ByteVec {
         let mut v = self.to_bytes_le();
         v.reverse();
         v
@@ -709,12 +711,13 @@ impl BigUint {
     /// use num_bigint::BigUint;
     ///
     /// let i = BigUint::parse_bytes(b"1125", 10).unwrap();
-    /// assert_eq!(i.to_bytes_le(), vec![101, 4]);
+    /// let a: smallvec::SmallVec<[u8; 8]> = smallvec::smallvec![101, 4];
+    /// assert_eq!(i.to_bytes_le(), a);
     /// ```
     #[inline]
-    pub fn to_bytes_le(&self) -> Vec<u8> {
+    pub fn to_bytes_le(&self) -> ByteVec {
         if self.is_zero() {
-            vec![0]
+            smallvec::smallvec![0]
         } else {
             convert::to_bitwise_digits_le(self, 8)
         }
@@ -809,7 +812,7 @@ impl BigUint {
     pub fn to_str_radix(&self, radix: u32) -> String {
         let mut v = to_str_radix_reversed(self, radix);
         v.reverse();
-        unsafe { String::from_utf8_unchecked(v) }
+        unsafe { String::from_utf8_unchecked(v.to_vec()) }
     }
 
     /// Returns the integer in the requested base in big-endian digit order.
@@ -822,12 +825,12 @@ impl BigUint {
     /// ```
     /// use num_bigint::BigUint;
     ///
-    /// assert_eq!(BigUint::from(0xFFFFu64).to_radix_be(159),
-    ///            vec![2, 94, 27]);
+    /// let a: smallvec::SmallVec<[u8; 8]> = smallvec::smallvec![2, 94, 27];
+    /// assert_eq!(BigUint::from(0xFFFFu64).to_radix_be(159), a);
     /// // 0xFFFF = 65535 = 2*(159^2) + 94*159 + 27
     /// ```
     #[inline]
-    pub fn to_radix_be(&self, radix: u32) -> Vec<u8> {
+    pub fn to_radix_be(&self, radix: u32) -> ByteVec {
         let mut v = convert::to_radix_le(self, radix);
         v.reverse();
         v
@@ -843,12 +846,12 @@ impl BigUint {
     /// ```
     /// use num_bigint::BigUint;
     ///
-    /// assert_eq!(BigUint::from(0xFFFFu64).to_radix_le(159),
-    ///            vec![27, 94, 2]);
+    /// let a: smallvec::SmallVec<[u8; 8]> = smallvec::smallvec![27, 94, 2];
+    /// assert_eq!(BigUint::from(0xFFFFu64).to_radix_le(159), a);
     /// // 0xFFFF = 65535 = 27 + 94*159 + 2*(159^2)
     /// ```
     #[inline]
-    pub fn to_radix_le(&self, radix: u32) -> Vec<u8> {
+    pub fn to_radix_le(&self, radix: u32) -> ByteVec {
         convert::to_radix_le(self, radix)
     }
 
@@ -1064,7 +1067,7 @@ impl num_traits::FromBytes for BigUint {
 }
 
 impl num_traits::ToBytes for BigUint {
-    type Bytes = Vec<u8>;
+    type Bytes = ByteVec;
 
     fn to_be_bytes(&self) -> Self::Bytes {
         self.to_bytes_be()

@@ -1,7 +1,7 @@
 // This uses stdlib features higher than the MSRV
 #![allow(clippy::manual_range_contains)] // 1.35
 
-use super::{biguint_from_vec, BigUint, ToBigUint};
+use super::{biguint_from_vec, BigUint, ByteVec, ToBigUint};
 
 use super::addition::add2;
 use super::division::{div_rem_digit, FAST_DIV_WIDE};
@@ -598,7 +598,7 @@ impl From<bool> for BigUint {
 }
 
 // Extract bitwise digits that evenly divide BigDigit
-pub(super) fn to_bitwise_digits_le(u: &BigUint, bits: u8) -> Vec<u8> {
+pub(super) fn to_bitwise_digits_le(u: &BigUint, bits: u8) -> ByteVec {
     debug_assert!(!u.is_zero() && bits <= 8 && big_digit::BITS % bits == 0);
 
     let last_i = u.data.len() - 1;
@@ -607,7 +607,7 @@ pub(super) fn to_bitwise_digits_le(u: &BigUint, bits: u8) -> Vec<u8> {
     let digits = Integer::div_ceil(&u.bits(), &u64::from(bits))
         .to_usize()
         .unwrap_or(usize::MAX);
-    let mut res = Vec::with_capacity(digits);
+    let mut res = ByteVec::with_capacity(digits);
 
     for mut r in u.data[..last_i].iter().cloned() {
         for _ in 0..digits_per_big_digit {
@@ -626,14 +626,14 @@ pub(super) fn to_bitwise_digits_le(u: &BigUint, bits: u8) -> Vec<u8> {
 }
 
 // Extract bitwise digits that don't evenly divide BigDigit
-fn to_inexact_bitwise_digits_le(u: &BigUint, bits: u8) -> Vec<u8> {
+fn to_inexact_bitwise_digits_le(u: &BigUint, bits: u8) -> ByteVec {
     debug_assert!(!u.is_zero() && bits <= 8 && big_digit::BITS % bits != 0);
 
     let mask: BigDigit = (1 << bits) - 1;
     let digits = Integer::div_ceil(&u.bits(), &u64::from(bits))
         .to_usize()
         .unwrap_or(usize::MAX);
-    let mut res = Vec::with_capacity(digits);
+    let mut res = ByteVec::with_capacity(digits);
 
     let mut r = 0;
     let mut rbits = 0;
@@ -668,7 +668,7 @@ fn to_inexact_bitwise_digits_le(u: &BigUint, bits: u8) -> Vec<u8> {
 
 // Extract little-endian radix digits
 #[inline(always)] // forced inline to get const-prop for radix=10
-pub(super) fn to_radix_digits_le(u: &BigUint, radix: u32) -> Vec<u8> {
+pub(super) fn to_radix_digits_le(u: &BigUint, radix: u32) -> ByteVec {
     debug_assert!(!u.is_zero() && !radix.is_power_of_two());
 
     #[cfg(feature = "std")]
@@ -683,7 +683,7 @@ pub(super) fn to_radix_digits_le(u: &BigUint, radix: u32) -> Vec<u8> {
     };
 
     // Estimate how big the result will be, so we can pre-allocate it.
-    let mut res = Vec::with_capacity(radix_digits.to_usize().unwrap_or(0));
+    let mut res = ByteVec::with_capacity(radix_digits.to_usize().unwrap_or(0));
 
     let mut digits = u.clone();
 
@@ -747,9 +747,9 @@ pub(super) fn to_radix_digits_le(u: &BigUint, radix: u32) -> Vec<u8> {
     res
 }
 
-pub(super) fn to_radix_le(u: &BigUint, radix: u32) -> Vec<u8> {
+pub(super) fn to_radix_le(u: &BigUint, radix: u32) -> ByteVec {
     if u.is_zero() {
-        vec![0]
+        smallvec::smallvec![0]
     } else if radix.is_power_of_two() {
         // Powers of two can use bitwise masks and shifting instead of division
         let bits = ilog2(radix);
@@ -767,11 +767,11 @@ pub(super) fn to_radix_le(u: &BigUint, radix: u32) -> Vec<u8> {
     }
 }
 
-pub(crate) fn to_str_radix_reversed(u: &BigUint, radix: u32) -> Vec<u8> {
+pub(crate) fn to_str_radix_reversed(u: &BigUint, radix: u32) -> ByteVec {
     assert!(2 <= radix && radix <= 36, "The radix must be within 2...36");
 
     if u.is_zero() {
-        return vec![b'0'];
+        return smallvec::smallvec![b'0'];
     }
 
     let mut res = to_radix_le(u, radix);

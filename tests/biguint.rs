@@ -18,6 +18,10 @@ use num_traits::{
 mod consts;
 use crate::consts::*;
 
+use smallvec::smallvec;
+type ByteVec = smallvec::SmallVec<[u8; 8]>;
+
+
 #[macro_use]
 mod macros;
 
@@ -39,19 +43,21 @@ fn test_from_bytes_be() {
 fn test_to_bytes_be() {
     fn check(s: &str, result: &str) {
         let b = BigUint::parse_bytes(result.as_bytes(), 10).unwrap();
-        assert_eq!(b.to_bytes_be(), s.as_bytes());
-        assert_eq!(<BigUint as ToBytes>::to_be_bytes(&b), s.as_bytes());
+        assert_eq!(b.to_bytes_be().as_slice(), s.as_bytes());
+        assert_eq!(<BigUint as ToBytes>::to_be_bytes(&b).as_slice(), s.as_bytes());
     }
     check("A", "65");
     check("AA", "16705");
     check("AB", "16706");
     check("Hello world!", "22405534230753963835153736737");
     let b: BigUint = Zero::zero();
-    assert_eq!(b.to_bytes_be(), [0]);
+    let a: ByteVec = smallvec![0];
+    assert_eq!(b.to_bytes_be(), a);
 
     // Test with leading/trailing zero bytes and a full BigDigit of value 0
     let b = BigUint::from_str_radix("00010000000000000200", 16).unwrap();
-    assert_eq!(b.to_bytes_be(), [1, 0, 0, 0, 0, 0, 0, 2, 0]);
+    let a: ByteVec = smallvec![1, 0, 0, 0, 0, 0, 0, 2, 0];
+    assert_eq!(b.to_bytes_be(), a);
 }
 
 #[test]
@@ -72,19 +78,21 @@ fn test_from_bytes_le() {
 fn test_to_bytes_le() {
     fn check(s: &str, result: &str) {
         let b = BigUint::parse_bytes(result.as_bytes(), 10).unwrap();
-        assert_eq!(b.to_bytes_le(), s.as_bytes());
-        assert_eq!(<BigUint as ToBytes>::to_le_bytes(&b), s.as_bytes());
+        assert_eq!(b.to_bytes_le().as_slice(), s.as_bytes());
+        assert_eq!(<BigUint as ToBytes>::to_le_bytes(&b).as_slice(), s.as_bytes());
     }
     check("A", "65");
     check("AA", "16705");
     check("BA", "16706");
     check("!dlrow olleH", "22405534230753963835153736737");
     let b: BigUint = Zero::zero();
-    assert_eq!(b.to_bytes_le(), [0]);
+    let a: ByteVec = smallvec![0];
+    assert_eq!(b.to_bytes_le(), a);
 
     // Test with leading/trailing zero bytes and a full BigDigit of value 0
     let b = BigUint::from_str_radix("00010000000000000200", 16).unwrap();
-    assert_eq!(b.to_bytes_le(), [0, 2, 0, 0, 0, 0, 0, 0, 1]);
+    let a: ByteVec = smallvec![0, 2, 0, 0, 0, 0, 0, 0, 1];
+    assert_eq!(b.to_bytes_le(), a);
 }
 
 #[test]
@@ -1602,11 +1610,11 @@ fn test_from_and_to_radix() {
     for &(bigint, radix, inbaseradix_le) in GROUND_TRUTH.iter() {
         let bigint = BigUint::parse_bytes(bigint, 16).unwrap();
         // to_radix_le
-        assert_eq!(bigint.to_radix_le(radix), inbaseradix_le);
+        assert_eq!(bigint.to_radix_le(radix).as_slice(), inbaseradix_le);
         // to_radix_be
         let mut inbase_be = bigint.to_radix_be(radix);
         inbase_be.reverse(); // now le
-        assert_eq!(inbase_be, inbaseradix_le);
+        assert_eq!(inbase_be.as_slice(), inbaseradix_le);
         // from_radix_le
         assert_eq!(
             BigUint::from_radix_le(inbaseradix_le, radix).unwrap(),
