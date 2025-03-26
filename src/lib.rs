@@ -100,7 +100,6 @@
 #![warn(rust_2018_idioms)]
 #![no_std]
 
-#[macro_use]
 extern crate alloc;
 
 #[cfg(feature = "std")]
@@ -265,4 +264,41 @@ mod big_digit {
     pub(crate) fn to_doublebigdigit(hi: BigDigit, lo: BigDigit) -> DoubleBigDigit {
         DoubleBigDigit::from(lo) | (DoubleBigDigit::from(hi) << BITS)
     }
+}
+
+
+pub type Vec<T> = smallvec::SmallVec<[T; 8]>;
+
+// Shadow the vec! macro to work specifically with ByteVec
+#[macro_export]
+macro_rules! vec {
+    // Empty vector case
+    () => {
+        $crate::Vec::new()
+    };
+    // count helper
+    (@one $x:expr) => (1usize);
+    // Repeated element case
+    ($elem:expr; $n:expr) => {{
+        let e = $elem; // Evaluate once
+        let n = $n;    // Evaluate once
+        let mut result: $crate::Vec<_> = $crate::Vec::with_capacity(n);
+        result.resize(n, e);
+        result
+    }};
+
+    // List of elements case
+    ($($x:expr),* $(,)?) => {{
+        // Count elements at compile time
+        let count = 0usize $(+ $crate::vec!(@one $x))*;
+        let mut result: $crate::Vec<_> = $crate::Vec::with_capacity(count);
+
+        if count <= result.inline_size() {
+            $(result.push($x);)*
+            result
+        } else {
+            // Use standard vec for larger collections
+            $crate::Vec::from_vec(::std::vec![$($x,)*])
+        }
+    }};
 }

@@ -1,11 +1,10 @@
 use super::Sign::{self, Minus, NoSign, Plus};
 use super::{BigInt, ToBigInt};
 
-use crate::biguint::ByteVec;
+use crate::Vec;
 use crate::TryFromBigIntError;
 use crate::{BigUint, ParseBigIntError, ToBigUint};
 
-use alloc::vec::Vec;
 use core::cmp::Ordering::{Equal, Greater, Less};
 use core::convert::TryFrom;
 use core::str::{self, FromStr};
@@ -408,7 +407,7 @@ pub(super) fn from_signed_bytes_le(digits: &[u8]) -> BigInt {
 }
 
 #[inline]
-pub(super) fn to_signed_bytes_be(x: &BigInt) -> ByteVec {
+pub(super) fn to_signed_bytes_be(x: &BigInt) -> Vec<u8> {
     let mut bytes = x.data.to_bytes_be();
     let first_byte = bytes.first().cloned().unwrap_or(0);
     if first_byte > 0x7f
@@ -424,7 +423,7 @@ pub(super) fn to_signed_bytes_be(x: &BigInt) -> ByteVec {
 }
 
 #[inline]
-pub(super) fn to_signed_bytes_le(x: &BigInt) -> ByteVec {
+pub(super) fn to_signed_bytes_le(x: &BigInt) -> Vec<u8> {
     let mut bytes = x.data.to_bytes_le();
     let last_byte = bytes.last().cloned().unwrap_or(0);
     if last_byte > 0x7f

@@ -1,7 +1,7 @@
 use crate::big_digit::{self, BigDigit};
 
 use alloc::string::String;
-use alloc::vec::Vec;
+use crate::{Vec,vec};
 use core::cmp;
 use core::cmp::Ordering;
 use core::default::Default;
@@ -32,7 +32,6 @@ pub(crate) use self::convert::to_str_radix_reversed;
 pub use self::iter::{U32Digits, U64Digits};
 
 pub(crate) type InnerType = smallvec::SmallVec<[BigDigit; 1]>;
-pub type ByteVec = smallvec::SmallVec<[u8; 8]>;
 
 /// A big unsigned integer type.
 pub struct BigUint {
@@ -690,14 +689,13 @@ impl BigUint {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigUint;
+    /// use num_bigint::{BigUint, vec};
     ///
     /// let i = BigUint::parse_bytes(b"1125", 10).unwrap();
-    /// let a: smallvec::SmallVec<[u8; 8]> = smallvec::smallvec![4, 101];
-    /// assert_eq!(i.to_bytes_be(), a);
+    /// assert_eq!(i.to_bytes_be(), vec![4, 101]);
     /// ```
     #[inline]
-    pub fn to_bytes_be(&self) -> ByteVec {
+    pub fn to_bytes_be(&self) -> Vec<u8> {
         let mut v = self.to_bytes_le();
         v.reverse();
         v
@@ -708,16 +706,15 @@ impl BigUint {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigUint;
+    /// use num_bigint::{BigUint, vec};
     ///
     /// let i = BigUint::parse_bytes(b"1125", 10).unwrap();
-    /// let a: smallvec::SmallVec<[u8; 8]> = smallvec::smallvec![101, 4];
-    /// assert_eq!(i.to_bytes_le(), a);
+    /// assert_eq!(i.to_bytes_le(), vec![101, 4]);
     /// ```
     #[inline]
-    pub fn to_bytes_le(&self) -> ByteVec {
+    pub fn to_bytes_le(&self) -> Vec<u8> {
         if self.is_zero() {
-            smallvec::smallvec![0]
+            vec![0]
         } else {
             convert::to_bitwise_digits_le(self, 8)
         }
@@ -729,7 +726,7 @@ impl BigUint {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigUint;
+    /// use num_bigint::{BigUint, vec};
     ///
     /// assert_eq!(BigUint::from(1125u32).to_u32_digits(), vec![1125]);
     /// assert_eq!(BigUint::from(4294967295u32).to_u32_digits(), vec![4294967295]);
@@ -747,7 +744,7 @@ impl BigUint {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigUint;
+    /// use num_bigint::{BigUint, vec};
     ///
     /// assert_eq!(BigUint::from(1125u32).to_u64_digits(), vec![1125]);
     /// assert_eq!(BigUint::from(4294967295u32).to_u64_digits(), vec![4294967295]);
@@ -766,7 +763,7 @@ impl BigUint {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigUint;
+    /// use num_bigint::{BigUint, Vec, vec};
     ///
     /// assert_eq!(BigUint::from(1125u32).iter_u32_digits().collect::<Vec<u32>>(), vec![1125]);
     /// assert_eq!(BigUint::from(4294967295u32).iter_u32_digits().collect::<Vec<u32>>(), vec![4294967295]);
@@ -784,7 +781,7 @@ impl BigUint {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigUint;
+    /// use num_bigint::{BigUint, Vec, vec};
     ///
     /// assert_eq!(BigUint::from(1125u32).iter_u64_digits().collect::<Vec<u64>>(), vec![1125]);
     /// assert_eq!(BigUint::from(4294967295u32).iter_u64_digits().collect::<Vec<u64>>(), vec![4294967295]);
@@ -823,14 +820,14 @@ impl BigUint {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigUint;
+    /// use num_bigint::{BigUint, vec};
     ///
-    /// let a: smallvec::SmallVec<[u8; 8]> = smallvec::smallvec![2, 94, 27];
-    /// assert_eq!(BigUint::from(0xFFFFu64).to_radix_be(159), a);
+    /// assert_eq!(BigUint::from(0xFFFFu64).to_radix_be(159),
+    ///            vec![2, 94, 27]);
     /// // 0xFFFF = 65535 = 2*(159^2) + 94*159 + 27
     /// ```
     #[inline]
-    pub fn to_radix_be(&self, radix: u32) -> ByteVec {
+    pub fn to_radix_be(&self, radix: u32) -> Vec<u8> {
         let mut v = convert::to_radix_le(self, radix);
         v.reverse();
         v
@@ -844,14 +841,14 @@ impl BigUint {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigUint;
+    /// use num_bigint::{BigUint, vec};
     ///
-    /// let a: smallvec::SmallVec<[u8; 8]> = smallvec::smallvec![27, 94, 2];
-    /// assert_eq!(BigUint::from(0xFFFFu64).to_radix_le(159), a);
+    /// assert_eq!(BigUint::from(0xFFFFu64).to_radix_le(159),
+    ///            vec![27, 94, 2]);
     /// // 0xFFFF = 65535 = 27 + 94*159 + 2*(159^2)
     /// ```
     #[inline]
-    pub fn to_radix_le(&self, radix: u32) -> ByteVec {
+    pub fn to_radix_le(&self, radix: u32) -> Vec<u8> {
         convert::to_radix_le(self, radix)
     }
 
@@ -1067,7 +1064,7 @@ impl num_traits::FromBytes for BigUint {
 }
 
 impl num_traits::ToBytes for BigUint {
-    type Bytes = ByteVec;
+    type Bytes = Vec<u8>;
 
     fn to_be_bytes(&self) -> Self::Bytes {
         self.to_bytes_be()
@@ -1199,7 +1196,7 @@ fn test_u32_u128() {
 #[test]
 fn test_u128_u32_roundtrip() {
     // roundtrips
-    let values = vec![
+    let values = std::vec![
         0u128,
         1u128,
         u64::MAX as u128 * 3,

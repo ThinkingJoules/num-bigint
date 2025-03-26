@@ -2,7 +2,7 @@
 #![allow(clippy::suspicious_arithmetic_impl)]
 
 use alloc::string::String;
-use alloc::vec::Vec;
+use crate::Vec;
 use core::cmp::Ordering::{self, Equal};
 use core::default::Default;
 use core::fmt;
@@ -16,8 +16,9 @@ use num_traits::{ConstZero, Num, One, Pow, Signed, Zero};
 use self::Sign::{Minus, NoSign, Plus};
 
 use crate::big_digit::BigDigit;
-use crate::biguint::{to_str_radix_reversed, ByteVec};
+use crate::biguint::to_str_radix_reversed;
 use crate::biguint::{BigUint, IntDigits, U32Digits, U64Digits};
+
 
 mod addition;
 mod division;
@@ -691,9 +692,9 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::{BigInt, Sign};
+    /// use num_bigint::{BigInt, Sign, vec};
     ///
-    /// let inbase190 = smallvec::smallvec![15, 33, 125, 12, 14];
+    /// let inbase190 = vec![15, 33, 125, 12, 14];
     /// let a = BigInt::from_radix_be(Sign::Minus, &inbase190, 190).unwrap();
     /// assert_eq!(a.to_radix_be(190), (Sign:: Minus, inbase190));
     /// ```
@@ -712,9 +713,9 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::{BigInt, Sign};
+    /// use num_bigint::{BigInt, Sign, vec};
     ///
-    /// let inbase190 = smallvec::smallvec![14, 12, 125, 33, 15];
+    /// let inbase190 = vec![14, 12, 125, 33, 15];
     /// let a = BigInt::from_radix_be(Sign::Minus, &inbase190, 190).unwrap();
     /// assert_eq!(a.to_radix_be(190), (Sign::Minus, inbase190));
     /// ```
@@ -728,13 +729,13 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::{ToBigInt, Sign};
+    /// use num_bigint::{ToBigInt, Sign, vec};
     ///
     /// let i = -1125.to_bigint().unwrap();
-    /// assert_eq!(i.to_bytes_be(), (Sign::Minus, smallvec::smallvec! [4, 101]));
+    /// assert_eq!(i.to_bytes_be(), (Sign::Minus, vec![4, 101]));
     /// ```
     #[inline]
-    pub fn to_bytes_be(&self) -> (Sign, ByteVec) {
+    pub fn to_bytes_be(&self) -> (Sign, Vec<u8>) {
         (self.sign, self.data.to_bytes_be())
     }
 
@@ -743,13 +744,13 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::{ToBigInt, Sign};
+    /// use num_bigint::{ToBigInt, Sign, vec};
     ///
     /// let i = -1125.to_bigint().unwrap();
-    /// assert_eq!(i.to_bytes_le(), (Sign::Minus, smallvec::smallvec![101, 4]));
+    /// assert_eq!(i.to_bytes_le(), (Sign::Minus, vec![101, 4]));
     /// ```
     #[inline]
-    pub fn to_bytes_le(&self) -> (Sign, ByteVec) {
+    pub fn to_bytes_le(&self) -> (Sign, Vec<u8>) {
         (self.sign, self.data.to_bytes_le())
     }
 
@@ -759,7 +760,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::{BigInt, Sign};
+    /// use num_bigint::{BigInt, Sign, vec};
     ///
     /// assert_eq!(BigInt::from(-1125).to_u32_digits(), (Sign::Minus, vec![1125]));
     /// assert_eq!(BigInt::from(4294967295u32).to_u32_digits(), (Sign::Plus, vec![4294967295]));
@@ -778,7 +779,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::{BigInt, Sign};
+    /// use num_bigint::{BigInt, Sign, vec};
     ///
     /// assert_eq!(BigInt::from(-1125).to_u64_digits(), (Sign::Minus, vec![1125]));
     /// assert_eq!(BigInt::from(4294967295u32).to_u64_digits(), (Sign::Plus, vec![4294967295]));
@@ -798,7 +799,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigInt;
+    /// use num_bigint::{BigInt, Vec,vec};
     ///
     /// assert_eq!(BigInt::from(-1125).iter_u32_digits().collect::<Vec<u32>>(), vec![1125]);
     /// assert_eq!(BigInt::from(4294967295u32).iter_u32_digits().collect::<Vec<u32>>(), vec![4294967295]);
@@ -817,7 +818,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::BigInt;
+    /// use num_bigint::{BigInt, Vec, vec};
     ///
     /// assert_eq!(BigInt::from(-1125).iter_u64_digits().collect::<Vec<u64>>(), vec![1125u64]);
     /// assert_eq!(BigInt::from(4294967295u32).iter_u64_digits().collect::<Vec<u64>>(), vec![4294967295u64]);
@@ -836,14 +837,13 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::ToBigInt;
-    /// use smallvec::{SmallVec, smallvec};
-    /// let i = -1125.to_bigint().unwrap();
-    /// let a: SmallVec<[u8; 8]> = smallvec![251, 155];
-    /// assert_eq!(i.to_signed_bytes_be(), a);
+    /// use num_bigint::{BigInt, ToBigInt, vec};
+    ///
+    /// let i = -1125_i32.to_bigint().unwrap();
+    /// assert_eq!(i.to_signed_bytes_be(), vec![251, 155]);
     /// ```
     #[inline]
-    pub fn to_signed_bytes_be(&self) -> ByteVec {
+    pub fn to_signed_bytes_be(&self) -> Vec<u8> {
         convert::to_signed_bytes_be(self)
     }
 
@@ -852,14 +852,13 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::ToBigInt;
-    /// use smallvec::{SmallVec, smallvec};
+    /// use num_bigint::{BigInt, ToBigInt, vec};
+    ///
     /// let i = -1125.to_bigint().unwrap();
-    /// let a: SmallVec<[u8; 8]> = smallvec![155, 251];
-    /// assert_eq!(i.to_signed_bytes_le(), a);
+    /// assert_eq!(i.to_signed_bytes_le(), vec![155, 251]);
     /// ```
     #[inline]
-    pub fn to_signed_bytes_le(&self) -> ByteVec {
+    pub fn to_signed_bytes_le(&self) -> Vec<u8> {
         convert::to_signed_bytes_le(self)
     }
 
@@ -894,14 +893,14 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::{BigInt, Sign};
+    /// use num_bigint::{BigInt, Sign, vec};
     ///
     /// assert_eq!(BigInt::from(-0xFFFFi64).to_radix_be(159),
-    ///            (Sign::Minus, smallvec::smallvec![2, 94, 27]));
+    ///            (Sign::Minus, vec![2, 94, 27]));
     /// // 0xFFFF = 65535 = 2*(159^2) + 94*159 + 27
     /// ```
     #[inline]
-    pub fn to_radix_be(&self, radix: u32) -> (Sign, ByteVec) {
+    pub fn to_radix_be(&self, radix: u32) -> (Sign, Vec<u8>) {
         (self.sign, self.data.to_radix_be(radix))
     }
 
@@ -913,14 +912,14 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use num_bigint::{BigInt, Sign};
+    /// use num_bigint::{BigInt, Sign, vec};
     ///
     /// assert_eq!(BigInt::from(-0xFFFFi64).to_radix_le(159),
-    ///            (Sign::Minus, smallvec::smallvec![27, 94, 2]));
+    ///            (Sign::Minus, vec![27, 94, 2]));
     /// // 0xFFFF = 65535 = 27 + 94*159 + 2*(159^2)
     /// ```
     #[inline]
-    pub fn to_radix_le(&self, radix: u32) -> (Sign, ByteVec) {
+    pub fn to_radix_le(&self, radix: u32) -> (Sign, Vec<u8>) {
         (self.sign, self.data.to_radix_le(radix))
     }
 
@@ -1174,7 +1173,7 @@ impl num_traits::FromBytes for BigInt {
 }
 
 impl num_traits::ToBytes for BigInt {
-    type Bytes = ByteVec;
+    type Bytes = Vec<u8>;
 
     fn to_be_bytes(&self) -> Self::Bytes {
         self.to_signed_bytes_be()
